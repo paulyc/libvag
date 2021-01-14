@@ -1,0 +1,5 @@
+libvag.so*
+*.o
+*.lo
+libvag.a
+vb2vag
