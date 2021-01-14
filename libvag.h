@@ -28,7 +28,7 @@ static_assert(sizeof(struct VAGHeader) == 0x30);
 void set_vag_data_size(struct VAGHeader *hdr, uint32_t data_size_bytes);
 void set_vag_sample_frequency(struct VAGHeader *hdr, uint32_t sample_frequency_hz);
 char* set_vag_name(struct VAGHeader *hdr, char *name);
-size_t prepend_header_and_dump(char *vb_filename);
+size_t prepend_header_and_dump(char *vb_filename, bool is16k=false);
 
 #ifdef __cplusplus
 }

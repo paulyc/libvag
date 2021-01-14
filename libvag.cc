@@ -20,7 +20,7 @@ char* set_vag_name(struct VAGHeader *hdr, char *name) {
     return strncpy(hdr->Name, name, sizeof(hdr->Name));
 }
 
-size_t prepend_header_and_dump(char *vb_filename) {
+size_t prepend_header_and_dump(char *vb_filename, bool is16k) {
     size_t written = 0;
     char buf[4096];
     struct VAGHeader hdr;
@@ -28,6 +28,10 @@ size_t prepend_header_and_dump(char *vb_filename) {
     fseek(f, 0, SEEK_END);
     uint32_t data_size_bytes = ftell(f);
     set_vag_data_size(&hdr, data_size_bytes);
+    if (is16k) {
+        set_vag_sample_frequency(&hdr, 16000);
+    }
+    set_vag_name(&hdr, vb_filename);
     fseek(f, 0, SEEK_SET);
     written += fwrite(&hdr, 1, sizeof(VAGHeader), stdout);
     while (!feof(f)) {
