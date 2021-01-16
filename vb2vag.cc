@@ -1,8 +1,26 @@
+// Copyright (C) 2021 Paul Ciarlo <paul.ciarlo@gmail.com>
+//
+// This file is part of libvag.
+//
+// Foobar is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// libvag is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with libvag.  If not, see <https://www.gnu.org/licenses/>.
+
 #include "libvag.h"
 #include <string>
 #include <cstring>
 #include <cerrno>
 
+// gnarly, move to vastream
 struct vag_sample_t {
 	uint8_t raw_bytes[16]; // -> 28 output PCM samples
 } __attribute__((packed));
@@ -18,52 +36,6 @@ typedef channel_chunk_t uninterleaved_block_t[2];
 
 typedef vag_sample_t stereo_sample_t[2];
 typedef stereo_sample_t interleaved_block_t[BlockSizeSamples];
-
-#if 0
-/*
- * Copyright (c) 2001-2003 The FFmpeg project
- * adpcm.c
- */
-
-void adpcm2pcm() {
-	for (channel = 0; channel < avctx->channels; channel++) {
-        samples = samples_p[channel];
- 
-             /* Read in every sample for this channel.  */
-             for (i = 0; i < nb_samples / 28; i++) {
-                 int filter, shift, flag, byte;
- 
-                 filter = bytestream2_get_byteu(&gb);
-                 shift  = filter & 0xf;
-                 filter = filter >> 4;
-                 if (filter >= FF_ARRAY_ELEMS(xa_adpcm_table))
-                     return AVERROR_INVALIDDATA;
-                 flag   = bytestream2_get_byteu(&gb);
- 
-                 /* Decode 28 samples.  */
-                 for (n = 0; n < 28; n++) {
-                     int sample = 0, scale;
- 
-                     if (flag < 0x07) {
-                         if (n & 1) {
-                             scale = sign_extend(byte >> 4, 4);
-                         } else {
-                             byte  = bytestream2_get_byteu(&gb);
-                             scale = sign_extend(byte, 4);
-                         }
- 
-                         scale  = scale << 12;
-                         sample = (int)((scale >> shift) + (c->status[channel].sample1 * xa_adpcm_table[filter][0] + c->status[channel].sample2 * xa_adpcm_table[filter][1]) / 64);
-                     }
-                     *samples++ = av_clip_int16(sample);
-                     c->status[channel].sample2 = c->status[channel].sample1;
-                     c->status[channel].sample1 = sample;
-                 }
-             }
-         }
-         break
-}
-#endif
 
 int main(int argc, char *argv[]) {
 	struct VAGHeader hdr;
