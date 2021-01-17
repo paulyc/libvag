@@ -20,12 +20,6 @@
 #include <cstring>
 #include <cerrno>
 
-// gnarly, move to vastream
-struct vag_sample_t {
-	uint8_t raw_bytes[16]; // -> 28 output PCM samples
-} __attribute__((packed));
-static_assert(sizeof(vag_sample_t) == 16);
-
 constexpr int NumChannels = 2;
 constexpr int BlockSizeBytes = 0x2000;
 constexpr int BlockSizeSamples = BlockSizeBytes / sizeof(vag_sample_t);

@@ -33,18 +33,8 @@ extern "C" {
 #include <stdint.h>
 
 typedef struct ADPCMChannelStatus {
-    int predictor;
-    int16_t step_index;
-    int step;
-    /* for encoding */
-    int prev_sample;
-
-    /* MS version */
     int sample1;
     int sample2;
-    int coeff1;
-    int coeff2;
-    int idelta;
 } ADPCMChannelStatus;
 
 const uint8_t* adpcm2pcm(ADPCMChannelStatus *status, const uint8_t *bytes, int16_t *samples);

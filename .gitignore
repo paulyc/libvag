@@ -3,3 +3,4 @@ libvag.so*
 *.lo
 libvag.a
 vb2vag
+vb2pcm

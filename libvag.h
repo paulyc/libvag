@@ -50,6 +50,12 @@ void set_vag_sample_frequency(struct VAGHeader *hdr, uint32_t sample_frequency_h
 char* set_vag_name(struct VAGHeader *hdr, const char *name);
 FILE * init_header_open(struct VAGHeader *hdr, const char *vb_filename, bool is16k=false);
 
+struct vag_sample {
+	uint8_t raw_bytes[16]; // -> 28 output PCM samples
+} __attribute__((packed));
+static_assert(sizeof(struct vag_sample) == 16);
+typedef struct vag_sample vag_sample_t;
+
 #ifdef __cplusplus
 }
 #endif
