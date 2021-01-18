@@ -23,10 +23,12 @@
 #include <cerrno>
 
 void usage(char *procname) {
-	fprintf(stderr, "Usage: %s [-t|--talk] INPUT.VB [OUTPUT.RAW]\n\n"
-		            "Converts INPUT.VB to stereo 16-bit signed PCM; writes to OUTPUT.RAW, or stdout\n"
+	fprintf(stderr, "Usage: %s [-t|--talk] [-r|--raw] INPUT.VB [OUTPUT.WAV]\n\n"
+		            "Converts INPUT.VB to stereo 16-bit signed PCM; writes to OUTPUT.WAV, or stdout\n"
 					"Options:\n"
-					"-t --talk Talk radio (16khz sampling rate)\n\n", procname);
+					"-t --talk Talk radio (16khz sampling rate)\n"
+					"-r --raw  Don't write WAVE header\n\n",
+					procname);
 }
 
 int main(int argc, char *argv[]) {
@@ -34,6 +36,7 @@ int main(int argc, char *argv[]) {
 	std::optional<std::string> outfilename;
 	FILE *outfile = stdout;
 	bool is16k = false;
+	bool writewave = true;
     VCVAStream vcstream;
     VCVAStreamLQ vcstreamlq;
     int smp_written;
@@ -42,6 +45,8 @@ int main(int argc, char *argv[]) {
 		std::string strarg(*arg);
 		if (strarg == "-t" || strarg == "--talk") {
 			is16k = true;
+		} else if (strarg == "r" || strarg == "--raw") {
+			writewave = false;
 		} else if (strarg == "-h" || strarg == "--help" || strarg == "--usage") {
 			usage(argv[0]);
 			return ~0;
@@ -55,21 +60,31 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	if (outfilename != std::nullopt) {
-		outfile = fopen(outfilename.value().c_str(), "wb");
-	} else {
+	if (filename == std::nullopt) {
 		// needs to know number of samples in advance so can't use stdin but could be fixed
 		usage(argv[0]);
 		return ~0;
 	}
 
+	if (outfilename != std::nullopt) {
+		outfile = fopen(outfilename.value().c_str(), "wb");
+	}
+
     if (is16k) {
         vcstreamlq.Open(filename.value());
-        smp_written = vcstreamlq.DumpRawPCM(outfile);
+		if (writewave) {
+			smp_written = vcstreamlq.DumpWAV(outfile);
+		} else {
+			smp_written = vcstreamlq.DumpRawPCM(outfile);
+		}
         vcstreamlq.Close();
     } else {
         vcstream.Open(filename.value());
-        smp_written = vcstream.DumpRawPCM(outfile);
+        if (writewave) {
+			smp_written = vcstream.DumpWAV(outfile);
+		} else {
+			smp_written = vcstream.DumpRawPCM(outfile);
+		}
         vcstream.Close();
     }
 	if (outfile != stdout) {

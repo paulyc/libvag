@@ -18,6 +18,8 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#include "adpcm.h"
+
 #ifndef LIBVAG_H_INCLUDED
 #define LIBVAG_H_INCLUDED
 

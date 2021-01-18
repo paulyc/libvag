@@ -38,6 +38,7 @@
 #include "adpcm.h"
 
 #include <stddef.h>
+#include <string.h>
 
 /**
  * Clip a signed integer value into the -32768,32767 range.
@@ -66,7 +67,7 @@ static const int8_t xa_adpcm_table[5][2] = {
 };
 
 // 16 bytes -> 28 samples
-const uint8_t* adpcm2pcm(ADPCMChannelStatus *status, const uint8_t *bytes, int16_t *samples) {
+const uint8_t* adpcm2pcm16le(ADPCMChannelStatus *status, const uint8_t *bytes, pcm_sample_s16le_t *samples) {
     int filter, shift, flag, byte;
 
     filter = *bytes++;
@@ -75,7 +76,7 @@ const uint8_t* adpcm2pcm(ADPCMChannelStatus *status, const uint8_t *bytes, int16
     if (filter >= 5)
         return NULL;
     flag = *bytes++;
- 
+
     /* Decode 28 samples.  */
     for (int n = 0; n < 28; n++) {
         int sample = 0, scale;
@@ -87,13 +88,45 @@ const uint8_t* adpcm2pcm(ADPCMChannelStatus *status, const uint8_t *bytes, int16
                 byte  = *bytes++;
                 scale = sign_extend(byte, 4);
             }
- 
+
             scale  = scale << 12;
             sample = (int)((scale >> shift) + (status->sample1 * xa_adpcm_table[filter][0] + status->sample2 * xa_adpcm_table[filter][1]) / 64);
         }
-        *samples++ = av_clip_int16(sample);
         status->sample2 = status->sample1;
-        status->sample1 = sample;
+        status->sample1 = av_clip_int16(sample);
+        set_pcm_sample_s16le(samples++, status->sample1);
     }
     return bytes;
+}
+
+void init_wave_file_header(wave_file_header_t *hdr, unsigned channels, unsigned sample_rate, unsigned bits_per_sample, unsigned num_samples)
+{
+    const uint32_t data_size_bytes = num_samples * channels * bits_per_sample / 8;
+    wave_file_header_t h = {
+        .riff = {
+            {'R','I','F','F'},
+            {0}, // fill in 36 + data_size_bytes
+            {'W','A','V','E'}
+        },
+        .fmt = {
+            {'f','m','t',' '},
+            {16,0,0,0},
+            {1,0},
+            {channels,0},
+            {0}, // fill in sample_rate
+            {0}, // fill in sample_rate * channels * bits_per_sample / 8
+            {0}, // fill in channels * bits_per_sample / 8
+            {16,0},
+        },
+        .data = {
+            {'d','a','t','a'},
+            {0}, // fill in data_size_bytes
+        }
+    };
+    set_uint32_le(h.riff.ChunkSize, 36 + data_size_bytes);
+    set_uint32_le(h.fmt.SampleRate, sample_rate);
+    set_uint32_le(h.fmt.ByteRate, sample_rate * channels * bits_per_sample / 8);
+    set_uint16_le(h.fmt.BlockAlign, channels * bits_per_sample / 8);
+    set_uint32_le(h.data.SubchunkSize, data_size_bytes);
+    memcpy(hdr, &h, sizeof(wave_file_header_t));
 }
