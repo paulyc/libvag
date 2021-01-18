@@ -28,7 +28,6 @@
 #include <cstdio>
 #include <cerrno>
 
-#include "adpcm.h"
 #include "libvag.h"
 
 template <unsigned SampleRate, off_t BlockSizeBytes, int Channels=2>
@@ -83,40 +82,56 @@ public:
     typedef stereo_sample_t interleaved_block_t[BlockSizeSamples];
 
     static constexpr off_t BlockSizePcmSamples = 28 * BlockSizeSamples;
-    typedef int16_t pcm_sample_t;
-    typedef pcm_sample_t pcm_block_t[BlockSizePcmSamples];
+    typedef pcm_sample_s16le_t pcm_block_t[BlockSizePcmSamples];
     typedef pcm_block_t uninterleaved_pcm_block_t[Channels];
+
+    constexpr inline off_t adpcmSamples() const
+    {
+        return _map_size / (sizeof(struct vag_sample) * Channels);
+    }
+
+    constexpr inline off_t pcmSamples() const
+    {
+        return 28 * adpcmSamples();
+    }
+
+    int DumpWAV(FILE *outfile)
+    {
+        wave_file_header_t hdr;
+        init_wave_file_header(&hdr, 2, 32000, 16, pcmSamples());
+        fwrite(&hdr, sizeof(wave_file_header_t), 1, outfile);
+        return DumpRawPCM(outfile);
+    }
 
     int DumpRawPCM(FILE *outfile)
     {
         uninterleaved_pcm_block_t out;
         const uint8_t *blk = static_cast<const uint8_t*>(_mmap);
-        const off_t adpcmSamples = _map_size / (sizeof(struct vag_sample) * Channels);
-        const off_t adpcmWholeBlocks = adpcmSamples / BlockSizeSamples;
-        const off_t adpcmPartialBlockSize = adpcmSamples % BlockSizeSamples;
+        const off_t adpcmWholeBlocks = adpcmSamples() / BlockSizeSamples;
+        const off_t adpcmPartialBlockSize = adpcmSamples() % BlockSizeSamples;
         const off_t pcmPartialBlockSamples = 28 * adpcmPartialBlockSize;
         off_t adpcmOffset = 0;
         off_t smpWritten = 0;
         for (off_t adpcmBlock = 0; adpcmBlock < adpcmWholeBlocks; ++adpcmBlock) {
             for (int ch = 0; ch < Channels; ++ch) {
                 for (int smp = 0; smp < BlockSizeSamples; ++smp) {
-                    blk = adpcm2pcm(_chanstat + ch, blk, &out[ch][smp * 28]);
+                    blk = adpcm2pcm16le(_chanstat + ch, blk, &out[ch][smp * 28]);
                 }
             }
             for (int smp = 0; smp < BlockSizePcmSamples; ++smp) {
                 for (int ch = 0; ch < Channels; ++ch) {
-                    smpWritten += fwrite(&out[ch][smp], sizeof(pcm_sample_t), 1, outfile);
+                    smpWritten += fwrite(&out[ch][smp], sizeof(pcm_sample_s16le_t), 1, outfile);
                 }
             }
         }
         for (int ch = 0; ch < Channels; ++ch) {
             for (int smp = 0; smp < adpcmPartialBlockSize; ++smp) {
-                blk = adpcm2pcm(_chanstat + ch, blk, &out[ch][smp * 28]);
+                blk = adpcm2pcm16le(_chanstat + ch, blk, &out[ch][smp * 28]);
             }
         }
         for (int smp = 0; smp < pcmPartialBlockSamples; ++smp) {
             for (int ch = 0; ch < Channels; ++ch) {
-                smpWritten += fwrite(&out[ch][smp], sizeof(pcm_sample_t), 1, outfile);
+                smpWritten += fwrite(&out[ch][smp], sizeof(pcm_sample_s16le_t), 1, outfile);
             }
         }
         return smpWritten;
