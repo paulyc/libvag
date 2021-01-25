@@ -45,36 +45,36 @@ typedef struct pcm_sample_s16le pcm_sample_s16le_t;
 
 static inline void set_pcm_sample_s16le(pcm_sample_s16le_t *smp, int16_t val)
 {
-    smp->data[0] = (val & 0x00FF) >> 0;
-    smp->data[1] = (val & 0xFF00) >> 8;
+    smp->data[0] = (val >> 0) & 0xFF;
+    smp->data[1] = (val >> 8) & 0xFF;
 }
 
 static inline void set_uint16_le(uint8_t out[2], uint16_t val)
 {
-    out[0] = (val & (0xFF <<  0)) >>  0;
-    out[1] = (val & (0xFF <<  8)) >>  8;
+    out[0] = (val >>  0) & 0xFF;
+    out[1] = (val >>  8) & 0xFF;
 }
 
 static inline void set_uint16_be(uint8_t out[2], uint16_t val)
 {
-    out[1] = (val & (0xFF <<  0)) >>  0;
-    out[0] = (val & (0xFF <<  8)) >>  8;
+    out[1] = (val >>  0) & 0xFF;
+    out[0] = (val >>  8) & 0xFF;
 }
 
 static inline void set_uint32_le(uint8_t out[4], uint32_t val)
 {
-    out[0] = (val & (0xFF <<  0)) >>  0;
-    out[1] = (val & (0xFF <<  8)) >>  8;
-    out[2] = (val & (0xFF << 16)) >> 16;
-    out[3] = (val & (0xFF << 24)) >> 24;
+    out[0] = (val >>  0) & 0xFF;
+    out[1] = (val >>  8) & 0xFF;
+    out[2] = (val >> 16) & 0xFF;
+    out[3] = (val >> 24) & 0xFF;
 }
 
 static inline void set_uint32_be(uint8_t out[4], uint32_t val)
 {
-    out[3] = (val & (0xFF <<  0)) >>  0;
-    out[2] = (val & (0xFF <<  8)) >>  8;
-    out[1] = (val & (0xFF << 16)) >> 16;
-    out[0] = (val & (0xFF << 24)) >> 24;
+    out[3] = (val >>  0) & 0xFF;
+    out[2] = (val >>  8) & 0xFF;
+    out[1] = (val >> 16) & 0xFF;
+    out[0] = (val >> 24) & 0xFF;
 }
 
 const uint8_t* adpcm2pcm16le(ADPCMChannelStatus *status, const uint8_t *bytes, pcm_sample_s16le_t *samples);

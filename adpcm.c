@@ -101,7 +101,8 @@ const uint8_t* adpcm2pcm16le(ADPCMChannelStatus *status, const uint8_t *bytes, p
 
 void init_wave_file_header(wave_file_header_t *hdr, unsigned channels, unsigned sample_rate, unsigned bits_per_sample, unsigned num_samples)
 {
-    const uint32_t data_size_bytes = num_samples * channels * bits_per_sample / 8;
+    const unsigned bytes_per_sample = channels * (bits_per_sample / 8);
+    const uint32_t data_size_bytes = num_samples * bytes_per_sample;
     wave_file_header_t h = {
         .riff = {
             {'R','I','F','F'},
@@ -116,17 +117,17 @@ void init_wave_file_header(wave_file_header_t *hdr, unsigned channels, unsigned 
             {0}, // fill in sample_rate
             {0}, // fill in sample_rate * channels * bits_per_sample / 8
             {0}, // fill in channels * bits_per_sample / 8
-            {16,0},
+            {bits_per_sample,0},
         },
         .data = {
             {'d','a','t','a'},
             {0}, // fill in data_size_bytes
         }
     };
-    set_uint32_le(h.riff.ChunkSize, 36 + data_size_bytes);
+    set_uint32_le(h.riff.ChunkSize, sizeof(wave_file_header_t) + data_size_bytes);
     set_uint32_le(h.fmt.SampleRate, sample_rate);
-    set_uint32_le(h.fmt.ByteRate, sample_rate * channels * bits_per_sample / 8);
-    set_uint16_le(h.fmt.BlockAlign, channels * bits_per_sample / 8);
+    set_uint32_le(h.fmt.ByteRate, sample_rate * bytes_per_sample);
+    set_uint16_le(h.fmt.BlockAlign, bytes_per_sample);
     set_uint32_le(h.data.SubchunkSize, data_size_bytes);
     memcpy(hdr, &h, sizeof(wave_file_header_t));
 }
