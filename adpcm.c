@@ -99,7 +99,7 @@ const uint8_t* adpcm2pcm16le(ADPCMChannelStatus *status, const uint8_t *bytes, p
     return bytes;
 }
 
-void init_wave_file_header(wave_file_header_t *hdr, unsigned channels, unsigned sample_rate, unsigned bits_per_sample, unsigned num_samples)
+void init_wave_file_header(wave_file_header_t *hdr, unsigned channels, unsigned sample_rate, unsigned bits_per_sample, unsigned long num_samples)
 {
     const uint32_t data_size_bytes = num_samples * channels * bits_per_sample / 8;
     wave_file_header_t h = {

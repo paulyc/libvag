@@ -51,30 +51,30 @@ static inline void set_pcm_sample_s16le(pcm_sample_s16le_t *smp, int16_t val)
 
 static inline void set_uint16_le(uint8_t out[2], uint16_t val)
 {
-    out[0] = (val & (0xFF <<  0)) >>  0;
-    out[1] = (val & (0xFF <<  8)) >>  8;
+    out[0] = (val & 0x00FFu) >>  0;
+    out[1] = (val & 0xFF00u) >>  8;
 }
 
 static inline void set_uint16_be(uint8_t out[2], uint16_t val)
 {
-    out[1] = (val & (0xFF <<  0)) >>  0;
-    out[0] = (val & (0xFF <<  8)) >>  8;
+    out[1] = (val & 0x00FFu) >>  0;
+    out[0] = (val & 0xFF00u) >>  8;
 }
 
 static inline void set_uint32_le(uint8_t out[4], uint32_t val)
 {
-    out[0] = (val & (0xFF <<  0)) >>  0;
-    out[1] = (val & (0xFF <<  8)) >>  8;
-    out[2] = (val & (0xFF << 16)) >> 16;
-    out[3] = (val & (0xFF << 24)) >> 24;
+    out[0] = (val & 0x000000FFlu) >>  0;
+    out[1] = (val & 0x0000FF00lu) >>  8;
+    out[2] = (val & 0x00FF0000lu) >> 16;
+    out[3] = (val & 0xFF000000lu) >> 24;
 }
 
 static inline void set_uint32_be(uint8_t out[4], uint32_t val)
 {
-    out[3] = (val & (0xFF <<  0)) >>  0;
-    out[2] = (val & (0xFF <<  8)) >>  8;
-    out[1] = (val & (0xFF << 16)) >> 16;
-    out[0] = (val & (0xFF << 24)) >> 24;
+    out[3] = (val & 0x000000FFlu) >>  0;
+    out[2] = (val & 0x0000FF00lu) >>  8;
+    out[1] = (val & 0x00FF0000lu) >> 16;
+    out[0] = (val & 0xFF000000lu) >> 24;
 }
 
 const uint8_t* adpcm2pcm16le(ADPCMChannelStatus *status, const uint8_t *bytes, pcm_sample_s16le_t *samples);
@@ -116,7 +116,7 @@ struct wave_file_header
 } __attribute__((packed));
 typedef struct wave_file_header wave_file_header_t;
 
-void init_wave_file_header(wave_file_header_t *hdr, unsigned channels, unsigned sample_rate, unsigned bits_per_sample, unsigned num_samples);
+void init_wave_file_header(wave_file_header_t *hdr, unsigned channels, unsigned sample_rate, unsigned bits_per_sample, unsigned long num_samples);
 
 #ifdef __cplusplus
 }
