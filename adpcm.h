@@ -31,6 +31,7 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <assert.h>
 
 typedef struct ADPCMChannelStatus {
     int sample1;
@@ -86,6 +87,7 @@ struct riff_chunk_desc
     uint8_t ChunkFormat[4];
 } __attribute__((packed));
 typedef struct riff_chunk_desc riff_chunk_desc_t;
+static_assert(sizeof(riff_chunk_desc_t) == 12,"sizeof(riff_chunk_desc_t) != 12");
 
 struct wave_fmt_desc
 {
@@ -99,6 +101,7 @@ struct wave_fmt_desc
     uint8_t BitsPerSample[2];
 } __attribute__((packed));
 typedef struct wave_fmt_desc wave_fmt_desc_t;
+static_assert(sizeof(wave_fmt_desc_t) == 24,"sizeof(riff_chunk_desc_t) != 24");
 
 struct wave_data_desc
 {
@@ -107,6 +110,7 @@ struct wave_data_desc
     // data follows
 } __attribute__((packed));
 typedef struct wave_data_desc wave_data_desc_t;
+static_assert(sizeof(wave_data_desc_t) == 8,"sizeof(wave_data_desc_t) != 8");
 
 struct wave_file_header
 {
@@ -115,6 +119,7 @@ struct wave_file_header
     struct wave_data_desc  data;
 } __attribute__((packed));
 typedef struct wave_file_header wave_file_header_t;
+static_assert(sizeof(wave_file_header_t) == 44,"sizeof(wave_file_header_t) != 44");
 
 void init_wave_file_header(wave_file_header_t *hdr, unsigned channels, unsigned sample_rate, unsigned bits_per_sample, unsigned long num_samples);
 
