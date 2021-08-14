@@ -58,4 +58,9 @@ clean:
 	rm -fv *.o *.lo vb2vag vb2pcm libvag.a libvag.so libvag.so.*
 .PHONY: clean
 
+install: vb2pcm vb2vag
+	install -m0755 vb2pcm vb2vag /usr/local/bin/
+
 #for file in *.VB; do ffmpeg -i "vags/0.$file.VAG" -i "vags/1.$file.VAG" -filter_complex "[0:a][1:a]amerge=inputs=2[a]" -map "[a]"  -y "wavs/$file.WAV"; done
+
+

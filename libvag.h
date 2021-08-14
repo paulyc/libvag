@@ -32,16 +32,17 @@ extern "C" {
 // CONFLICTING SOURCES ON CHANNELS, WILL CHECK SDK
 struct VAGHeader {
     char    Magick0[4]       = {'V', 'A', 'G', 'p'}; // 'VAGp' or 'pGAV'
-    uint8_t Version[4]       = {0, 0, 0, 6};    // 0.6 ?
+    uint8_t Version[4]       = {0, 0, 0, 3};    // 0.6 ?
     uint8_t StartAddr[4]     = {0};
     uint8_t DataSizeBytes[4] = {0};             // FILL ME IN
     uint8_t SampleFreqHz[4]  = {0, 0, 0x7d, 0}; // 32000 Hz
-    uint8_t VolumeLeft[2]    = {0, 0};
-    uint8_t VolumeRight[2]   = {0, 0};
+    uint8_t VolumeLeft[2]    = {0, 1};
+    uint8_t VolumeRight[2]   = {0, 1};
     uint8_t Pitch[2]         = {0};
     uint8_t ADSR1[2]         = {0};
     uint8_t ADSR2[2]         = {0};
-    uint8_t Reserved[2]      = {0};
+    uint8_t NumChannels      = {0}; // 0-1 = 1 channel; 2 = 2 channel (???)
+    uint8_t Reserved[1]      = {0};
     char    Name[16]         = "NAMENAMENAMENAM"; // Zero Terminated or can it be 16 actual characters? What encoding? IDK
 } __attribute((packed));
 static_assert(sizeof(struct VAGHeader) == 0x30);

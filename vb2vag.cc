@@ -38,30 +38,49 @@ int main(int argc, char *argv[]) {
 	size_t bytes_written = 0, rd, wr, wrL, wrR;
 
 	std::string filename;
-	bool is16k;
+	bool is16k=false;
+	bool stereoOutput=false;
 
-	if (argc == 3) {
-		filename = argv[2];
-		is16k = true;
-	} else if (argc == 2) {
-		filename = argv[1];
-		is16k = false;
-	} else {
-		fprintf(stderr, "Usage: %s [-t] <INPUT.VB>\n\n"
+	if (argc < 2) {
+		fprintf(stderr, "Usage: %s [-t] [-s] <INPUT.VB>\n\n"
 		                "Writes INPUT.VB to 0.INPUT.VB.VAG and 1.INPUT.VB.VAG (left and right channels)\n"
 						"Options:\n"
+						"-s Single file stereo output\n"
 						"-t Talk radio (16khz sampling rate)\n\n", argv[0]);
 		return ~0;
 	}
 
+	for (int i=1;i<argc;++i){
+		const std::string s = std::string(argv[i]);
+		if (s == "-t") {
+			is16k=true;
+		} else if (s == "-s") {
+			stereoOutput=true;
+		} else {
+			filename = s;
+		}
+	}
+
 	FILE *infile = init_header_open(&hdr, filename.c_str(), is16k);
-	FILE *outfileL = fopen(std::string("0." + filename + ".VAG").c_str(), "wb");
-	FILE *outfileR = fopen(std::string("1." + filename + ".VAG").c_str(), "wb");
-	FILE *outfile = fopen(std::string("2CH." + filename + ".VAG").c_str(), "wb");
+	FILE *outfileL = NULL;
+	FILE *outfileR = NULL;
+	FILE *outfile = NULL;
+
+	fseek(infile,0,SEEK_END);
+	long input_bytes = ftell(infile);
+	fseek(infile,0,SEEK_SET);
+
+	set_vag_data_size(&hdr, input_bytes/2);
+	outfileL = fopen(std::string("0." + filename + ".VAG").c_str(), "wb");
+	outfileR = fopen(std::string("1." + filename + ".VAG").c_str(), "wb");
 	bytes_written += fwrite(&hdr, sizeof(VAGHeader), 1, outfileL);
 	bytes_written += fwrite(&hdr, sizeof(VAGHeader), 1, outfileR);
-	set_vag_data_size(&hdr, 2 * get_vag_data_size(&hdr));
+
+	outfile = fopen(std::string("2CH." + filename + ".VAG").c_str(), "wb");
+	hdr.NumChannels = 3;
+	set_vag_data_size(&hdr, input_bytes);
 	fwrite(&hdr, sizeof(VAGHeader), 1, outfile);
+
     for (; !feof(infile); ) {
 		wr = 0;
         rd = fread(input_chunk, sizeof(vag_sample_t), NumChannels * BlockSizeSamples, infile);
