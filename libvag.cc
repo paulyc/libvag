@@ -52,11 +52,11 @@ char* set_vag_name(struct VAGHeader *hdr, const char *name) {
     return strncpy(hdr->Name, name, sizeof(hdr->Name));
 }
 
-FILE* init_header_open(struct VAGHeader *hdr, const char *vb_filename, bool is16k) {
+FILE* init_header_open(struct VAGHeader *hdr, const char *vb_filename, bool is16k, bool stereoOutput) {
     FILE *f = fopen(vb_filename, "rb");
     fseek(f, 0, SEEK_END);
     uint32_t data_size_bytes = ftell(f);
-    set_vag_data_size(hdr, data_size_bytes/2);
+    set_vag_data_size(hdr, data_size_bytes/(stereoOutput?1:2));
     if (is16k) {
         set_vag_sample_frequency(hdr, 16000);
     }

@@ -55,13 +55,13 @@ int main(int argc, char *argv[]) {
 		if (s == "-t") {
 			is16k=true;
 		} else if (s == "-s") {
-			stereoOutput=true;
+			//stereoOutput=true;
 		} else {
 			filename = s;
 		}
 	}
 
-	FILE *infile = init_header_open(&hdr, filename.c_str(), is16k);
+	FILE *infile = init_header_open(&hdr, filename.c_str(), is16k, false);
 	FILE *outfileL = NULL;
 	FILE *outfileR = NULL;
 	FILE *outfile = NULL;
@@ -70,15 +70,16 @@ int main(int argc, char *argv[]) {
 	long input_bytes = ftell(infile);
 	fseek(infile,0,SEEK_SET);
 
-	set_vag_data_size(&hdr, input_bytes/2);
+	//already set by init_header_open set_vag_data_size(&hdr, input_bytes/2);
 	outfileL = fopen(std::string("0." + filename + ".VAG").c_str(), "wb");
 	outfileR = fopen(std::string("1." + filename + ".VAG").c_str(), "wb");
 	bytes_written += fwrite(&hdr, sizeof(VAGHeader), 1, outfileL);
 	bytes_written += fwrite(&hdr, sizeof(VAGHeader), 1, outfileR);
 
+	// not sure stereo actually works with libavcodec
 	outfile = fopen(std::string("2CH." + filename + ".VAG").c_str(), "wb");
-	hdr.NumChannels = 3;
-	set_vag_data_size(&hdr, input_bytes);
+	hdr.NumChannels[0] = 2;
+	set_vag_data_size(&hdr, get_vag_data_size(&hdr) * 2);
 	fwrite(&hdr, sizeof(VAGHeader), 1, outfile);
 
     for (; !feof(infile); ) {

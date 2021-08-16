@@ -41,7 +41,7 @@ struct VAGHeader {
     uint8_t Pitch[2]         = {0};
     uint8_t ADSR1[2]         = {0};
     uint8_t ADSR2[2]         = {0};
-    uint8_t NumChannels      = {0}; // 0-1 = 1 channel; 2 = 2 channel (???)
+    uint8_t NumChannels[1]   = {0}; // 0-1 = 1 channel; 2 = 2 channel (???)
     uint8_t Reserved[1]      = {0};
     char    Name[16]         = "NAMENAMENAMENAM"; // Zero Terminated or can it be 16 actual characters? What encoding? IDK
 } __attribute((packed));
@@ -51,7 +51,7 @@ void set_vag_data_size(struct VAGHeader *hdr, uint32_t data_size_bytes);
 uint32_t get_vag_data_size(struct VAGHeader *hdr);
 void set_vag_sample_frequency(struct VAGHeader *hdr, uint32_t sample_frequency_hz);
 char* set_vag_name(struct VAGHeader *hdr, const char *name);
-FILE * init_header_open(struct VAGHeader *hdr, const char *vb_filename, bool is16k=false);
+FILE * init_header_open(struct VAGHeader *hdr, const char *vb_filename, bool is16k=false, bool stereoOutput=false);
 
 struct vag_sample {
 	uint8_t raw_bytes[16]; // -> 28 output PCM samples
