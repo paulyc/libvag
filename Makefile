@@ -5,6 +5,8 @@ CFLAGS := $(CFLAGS) -g -std=c11
 CXX ?= g++
 CXXFLAGS := $(CXXFLAGS) -g -std=c++17
 
+_: clean all
+
 all: libvag.a libvag.so vb2vag vb2pcm
 
 libvag.a: libvag.o adpcm.o

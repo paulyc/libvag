@@ -29,6 +29,7 @@
 #include <cerrno>
 
 #include "libvag.h"
+#include "decode.hpp"
 
 template <unsigned SampleRate, off_t BlockSizeBytes, int Channels=2>
 class RawVAStream
@@ -107,15 +108,22 @@ public:
     {
         uninterleaved_pcm_block_t out;
         const uint8_t *blk = static_cast<const uint8_t*>(_mmap);
+        // these partial blocks may exist because of interleave but should ideally be 0
         const off_t adpcmWholeBlocks = adpcmSamples() / BlockSizeSamples;
         const off_t adpcmPartialBlockSize = adpcmSamples() % BlockSizeSamples;
         const off_t pcmPartialBlockSamples = 28 * adpcmPartialBlockSize;
+        fprintf(stderr, "adpcmWholeBlocks %lld adpcmPartialBlockSize %lld pcmPartialBlockSamples %lld\n",adpcmWholeBlocks,adpcmPartialBlockSize,pcmPartialBlockSamples);
+        assert(adpcmPartialBlockSize==0);
+        assert(pcmPartialBlockSamples==0);
         off_t adpcmOffset = 0;
         off_t smpWritten = 0;
         for (off_t adpcmBlock = 0; adpcmBlock < adpcmWholeBlocks; ++adpcmBlock) {
             for (int ch = 0; ch < Channels; ++ch) {
                 for (int smp = 0; smp < BlockSizeSamples; ++smp) {
-                    blk = adpcm2pcm16le(_chanstat + ch, blk, &out[ch][smp * 28]);
+                    //blk = adpcm2pcm16le(_chanstat + ch, blk, &out[ch][smp * 28]);
+                    int res = _decoder[ch].decode(blk,(int16_t*)&out[ch][smp*28]);
+                    if (res != 16) fprintf(stderr, "decode returned not 16 but %d\n", res);
+                    blk += res;
                 }
             }
             for (int smp = 0; smp < BlockSizePcmSamples; ++smp) {
@@ -124,7 +132,7 @@ public:
                 }
             }
         }
-        for (int ch = 0; ch < Channels; ++ch) {
+        /*for (int ch = 0; ch < Channels; ++ch) {
             for (int smp = 0; smp < adpcmPartialBlockSize; ++smp) {
                 blk = adpcm2pcm16le(_chanstat + ch, blk, &out[ch][smp * 28]);
             }
@@ -133,7 +141,7 @@ public:
             for (int ch = 0; ch < Channels; ++ch) {
                 smpWritten += fwrite(&out[ch][smp], sizeof(pcm_sample_s16le_t), 1, outfile);
             }
-        }
+        }*/
         return smpWritten;
     }
     void Close()
@@ -155,6 +163,7 @@ private:
     void *_mmap;
     off_t _map_size;
     ADPCMChannelStatus _chanstat[Channels];
+    AdpcmDecoder _decoder[Channels];
 };
 
 typedef RawVAStream<32000, 0x2000, 2> VCVAStream;

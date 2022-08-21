@@ -32,7 +32,7 @@ extern "C" {
 // CONFLICTING SOURCES ON CHANNELS, WILL CHECK SDK
 struct VAGHeader {
     char    Magick0[4]       = {'V', 'A', 'G', 'p'}; // 'VAGp' or 'pGAV'
-    uint8_t Version[4]       = {0, 0, 0, 3};    // 0.6 ?
+    uint8_t Version[4]       = {0, 0, 0, 6};    // 0.6 ?
     uint8_t StartAddr[4]     = {0};
     uint8_t DataSizeBytes[4] = {0};             // FILL ME IN
     uint8_t SampleFreqHz[4]  = {0, 0, 0x7d, 0}; // 32000 Hz
