@@ -64,6 +64,7 @@ public:
 	int decode(const uint8_t *const adpcm, int16_t *pcm){
 		int shift=adpcm[0] & 0xf;
 		int filter=adpcm[0] >> 4;
+		int flag=adpcm[1];
 		if (filter >= 5) {
 			fprintf(stderr,"unknown filter %d, set to 0\n",filter);
 			filter=0;
@@ -74,10 +75,9 @@ public:
 		} else {
 			shift = 12-shift;
 		}
-		int ofs_in=1;
+		int ofs_in=2;
 		int ofs_out=0;
 		int scale,smp;
-		int flag=adpcm[ofs_in++];
 		do{
 			if (flag < 7) {
 				scale=adpcm[ofs_in++];
