@@ -40,33 +40,25 @@ const uint8_t* adpcm2pcm16le(ADPCMChannelStatus *status, const uint8_t *bytes, p
     return bytes;
 }
 */
+
 class AdpcmDecoder
 {
 public:
-	AdpcmDecoder(){/*initScaleLut();*/}
+	AdpcmDecoder(){}
 	~AdpcmDecoder(){}
-/*
-	typedef int32_t int_pair[2];
-	int_pair _scaleLut[1<<12]; // 12 bits lookup
-	constexpr int lut_index(int shift, int scale){return (shift<<8)&scale;}
-	void initScaleLut() {
-		for (int shift=0;shift<15;++shift) {
-			for (int scale=0;scale<256;++scale) {
-				int s=shift>12?0:12-shift;
-				_scaleLut[lut_index(shift,scale)][0] = sign_extend(scale,4)*(1<<s);
-				_scaleLut[lut_index(shift,scale)][1] = sign_extend(scale>>4,4)*(1<<s);
-			}
-		}
-	}
-*/
+
 	// 32 bytes -> 28 samples (56 bytes)
 	// return number of input bytes consumed
 	int decode(const uint8_t *const adpcm, int16_t *pcm){
 		int shift=adpcm[0] & 0xf;
 		int filter=adpcm[0] >> 4;
 		int flag=adpcm[1];
+		int ofs_in=2;
+		int ofs_out=0;
+		int scale,smp;
+
 		if (filter >= 5) {
-			fprintf(stderr,"unknown filter %d, set to 0\n",filter);
+			fprintf(stderr,"filter unknown %d, set to 0\n",filter);
 			filter=0;
 		}
 		if (shift > 12) {
@@ -75,26 +67,20 @@ public:
 		} else {
 			shift = 12-shift;
 		}
-		int ofs_in=2;
-		int ofs_out=0;
-		int scale,smp;
+		if (flag >= 7){
+			fprintf(stderr,"flag unknown %d, ignoring\n",flag);
+		}
+
 		do{
-			if (flag < 7) {
-				scale=adpcm[ofs_in++];
-				smp=sign_extend(scale,4)*(1<<shift) + ((_stat[0]*xa_adpcm_table[filter][0] + _stat[1]*xa_adpcm_table[filter][1]) >> 6);
-				_stat[1] = _stat[0];
-				_stat[0] = av_clip_int16(smp);
-				pcm[ofs_out++]=_stat[0];
-				smp=sign_extend(scale>>4,4)*(1<<shift) + ((_stat[0]*xa_adpcm_table[filter][0] + _stat[1]*xa_adpcm_table[filter][1]) >> 6);
-				_stat[1] = _stat[0];
-				_stat[0] = av_clip_int16(smp);
-				pcm[ofs_out++]=_stat[0];
-			}else{
-				_stat[1] = 0;
-				_stat[0] = 0;
-				pcm[ofs_out++]=0;
-				pcm[ofs_out++]=0;
-			}
+			scale=adpcm[ofs_in++];
+			smp=(_x=scale)*(1<<shift) + ((_s1*xa_adpcm_table[filter][0] + _s2*xa_adpcm_table[filter][1]) >> 6);
+			_s2 = _s1;
+			_s1 = av_clip_int16(smp);
+			pcm[ofs_out++]=_s1;
+			smp=(_x=(scale>>4))*(1<<shift) + ((_s1*xa_adpcm_table[filter][0] + _s2*xa_adpcm_table[filter][1]) >> 6);
+			_s2 = _s1;
+			_s1 = av_clip_int16(smp);
+			pcm[ofs_out++]=_s1;
 		}while(ofs_out < 28);
 		return ofs_in;
 	}
@@ -104,10 +90,9 @@ private:
 		if ((a+0x8000U) & ~0xFFFF) return (a>>31) ^ 0x7FFF;
 		else                       return a;
 	}
-
 	static constexpr int sign_extend(int val, unsigned bits)
 	{
-		unsigned shift = 8 * sizeof(int) - bits;
+		unsigned const shift = 8 * sizeof(int) - bits;
 		union { unsigned u; int s; } v = { (unsigned) val << shift };
 		return v.s >> shift;
 	}
@@ -118,7 +103,9 @@ private:
 		{  98, -55 },
 		{ 122, -60 }
 	};
-	int _stat[2]={0};
+	int _s1=0;
+	int _s2=0;
+	struct {signed int _x:4;};
 };
 
 #endif
