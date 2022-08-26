@@ -47,8 +47,8 @@ public:
 	AdpcmDecoder(){}
 	~AdpcmDecoder(){}
 
-	// 16 bytes -> 28 samples (56 bytes)
-	// return number of input bytes consumed
+	// 16 bytes -> 28  mono samples (56 bytes)
+	// return number of input bytes consumed (ie, 16, less in case of error)
 	int decode(const uint8_t *const adpcm, int16_t *pcm){
 		int shift=adpcm[0] & 0xf;
 		int filter=adpcm[0] >> 4;
@@ -73,14 +73,14 @@ public:
 
 		do{
 			scale=adpcm[ofs_in++];
-			smp=(_x=scale)*(1<<shift) + ((_s1*xa_adpcm_table[filter][0] + _s2*xa_adpcm_table[filter][1]) >> 6);
-			_s2 = _s1;
-			_s1 = av_clip_int16(smp);
-			pcm[ofs_out++]=_s1;
-			smp=(_x=(scale>>4))*(1<<shift) + ((_s1*xa_adpcm_table[filter][0] + _s2*xa_adpcm_table[filter][1]) >> 6);
-			_s2 = _s1;
-			_s1 = av_clip_int16(smp);
-			pcm[ofs_out++]=_s1;
+			smp=(_x=scale)*(1<<shift) + ((_s[0]*xa_adpcm_table[filter][0] + _s[1]*xa_adpcm_table[filter][1]) >> 6);
+			_s[1] = _s[0];
+			_s[0] = av_clip_int16(smp);
+			pcm[ofs_out++]=_s[0];
+			smp=(_x=(scale>>4))*(1<<shift) + ((_s[0]*xa_adpcm_table[filter][0] + _s[1]*xa_adpcm_table[filter][1]) >> 6);
+			_s[1] = _s[0];
+			_s[0] = av_clip_int16(smp);
+			pcm[ofs_out++]=_s[0];
 		}while(ofs_out < 28);
 		assert(ofs_in==16);
 		return ofs_in;
@@ -104,8 +104,7 @@ private:
 		{  98, -55 },
 		{ 122, -60 }
 	};
-	int _s1=0;
-	int _s2=0;
+	int _s[2]={0};
 	struct {signed int _x:4;};
 };
 
