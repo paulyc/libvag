@@ -47,7 +47,7 @@ public:
 	AdpcmDecoder(){}
 	~AdpcmDecoder(){}
 
-	// 32 bytes -> 28 samples (56 bytes)
+	// 16 bytes -> 28 samples (56 bytes)
 	// return number of input bytes consumed
 	int decode(const uint8_t *const adpcm, int16_t *pcm){
 		int shift=adpcm[0] & 0xf;
@@ -82,6 +82,7 @@ public:
 			_s1 = av_clip_int16(smp);
 			pcm[ofs_out++]=_s1;
 		}while(ofs_out < 28);
+		assert(ofs_in==16);
 		return ofs_in;
 	}
 private:
